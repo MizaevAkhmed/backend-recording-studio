@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('gallery', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->enum('type_user', ['student', 'teacher', 'admin']);
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('category_id');
+            $table->string('file_path');
             $table->timestamps();
+    
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
         });
     }
 
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('gallery');
     }
 };
