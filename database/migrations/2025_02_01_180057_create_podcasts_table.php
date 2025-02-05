@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('material_id');
             $table->string('file_path');  // Путь к аудиофайлу
             $table->timestamps();
+
+            $table->foreign('material_id')->references('id')->on('materials')->onDelete('cascade');
         });
     }
 

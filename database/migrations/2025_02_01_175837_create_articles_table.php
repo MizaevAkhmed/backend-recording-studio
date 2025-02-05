@@ -17,6 +17,8 @@ return new class extends Migration
             $table->text('content');  // Текст статьи
             $table->string('image')->nullable();  // Изображение статьи
             $table->timestamps();
+
+            $table->foreign('material_id')->references('id')->on('materials')->onDelete('cascade');
         });
     }
 

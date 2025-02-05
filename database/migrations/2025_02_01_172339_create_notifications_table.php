@@ -18,6 +18,9 @@ return new class extends Migration
             $table->foreignId('type_notification_id');
             $table->boolean('is_read')->default(false);
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('type_notification_id')->references('id')->on('type_notifications')->onDelete('cascade');
         });
     }
 
