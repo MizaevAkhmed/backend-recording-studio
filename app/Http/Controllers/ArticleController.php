@@ -29,7 +29,7 @@ class ArticleController extends Controller
         $article = Material::findOrFail($id);
 
         // Только для владельца материала или администратора
-        if (auth()->user()->id !== $article->user_id && auth()->user()->role !== 'admin') {
+        if (auth()->user()->id !== $article->id && auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 
@@ -43,7 +43,7 @@ class ArticleController extends Controller
         $article = Material::findOrFail($id);
 
         // Только для владельца материала или администратора
-        if (auth()->user()->id !== $article->user_id && auth()->user()->role !== 'admin') {
+        if (auth()->user()->id !== $article->id && auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 

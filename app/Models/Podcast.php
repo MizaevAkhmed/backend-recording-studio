@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Podcast extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'audio_path', 'user_id'];
+    // Столбцы, которые могут быть массово назначены
+    protected $fillable = ['material_id', 'title', 'description', 'file_path'];
 
-    public function user(): BelongsTo
+    // Связь с материалом
+    public function material()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Material::class); // Каждый podcast связан с одним материалом
     }
 }

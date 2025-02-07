@@ -4,21 +4,41 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Material extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'category_id', 'user_id'];
+    // Столбцы, которые могут быть массово назначены
+    protected $fillable = ['user_id', 'category_id'];
 
-    public function category(): BelongsTo
+    // Связь с пользователем
+    public function user()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(User::class); // Один материал принадлежит одному пользователю
     }
 
-    public function user(): BelongsTo
+    // Связь с категорией
+    public function category()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Category::class); // Один материал имеет одну категорию
+    }
+
+    // Связь с статьями (если есть)
+    public function articles()
+    {
+        return $this->hasMany(Article::class); // Один материал может иметь много статей
+    }
+
+    // Связь с подкастами (если есть)
+    public function podcasts()
+    {
+        return $this->hasMany(Podcast::class); // Один материал может иметь много подкастов
+    }
+
+    // Связь с видео (если есть)
+    public function videos()
+    {
+        return $this->hasMany(Video::class); // Один материал может иметь много видео
     }
 }

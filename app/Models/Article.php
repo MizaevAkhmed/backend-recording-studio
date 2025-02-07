@@ -4,16 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Article extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'content', 'image_path', 'user_id'];
+    // Столбцы, которые могут быть массово назначены
+    protected $fillable = ['material_id', 'title', 'content', 'image', 'description'];
 
-    public function user(): BelongsTo
+    // Связь с материалом
+    public function material()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Material::class); // Каждый article связан с одним материалом
     }
 }

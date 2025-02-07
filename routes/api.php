@@ -13,45 +13,105 @@ use App\Http\Controllers\PodcastController;
 use App\Http\Controllers\TypeNotificationController;
 use App\Http\Controllers\VideoController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\AdminController;
 
 // Публичные маршруты (доступны всем)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/materials', [MaterialController::class, 'index']); // Получить все материалы
-Route::get('/articles', [ArticleController::class, 'index']); // Получить все статьи
-Route::get('/podcasts', [PodcastController::class, 'index']); // Получить все подкасты
-Route::get('/videos', [VideoController::class, 'index']); // Получить все видео
-Route::get('/articles/{id}', [ArticleController::class, 'show']); // Получить одну статью
-Route::get('/podcasts/{id}', [PodcastController::class, 'show']); // Получить один подкаст
-Route::get('/videos/{id}', [VideoController::class, 'show']); // Получить одно видео
+Route::get('/categories', [CategoryController::class, 'index']); // Получить все категории
+Route::get('/galleries', [GalleryController::class, 'index']); // Получить все галереи
+Route::get('/news', [NewsController::class, 'index']); // Получить все новости
 
 // Защищенные маршруты (только для аутентифицированных пользователей)
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Материалы
+    Route::get('/materials', [MaterialController::class, 'index']);
+    Route::post('/materials', [MaterialController::class, 'store']);
+    Route::put('/materials/{id}', [MaterialController::class, 'update']);
+    Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
 
-    // Материалы - только для авторизованных пользователей
+    // Статьи
     Route::post('/articles', [ArticleController::class, 'store']);
     Route::put('/articles/{id}', [ArticleController::class, 'update']);
-    Route::delete('/articles/{id}', [ArticleController::class, 'destroy'])->middleware('can:update,article');
+    Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
 
+    // Подкасты
+    Route::get('/podcasts', [PodcastController::class, 'index']);
     Route::post('/podcasts', [PodcastController::class, 'store']);
     Route::put('/podcasts/{id}', [PodcastController::class, 'update']);
-    Route::delete('/podcasts/{id}', [PodcastController::class, 'destroy'])->middleware('can:update,podcast');
+    Route::delete('/podcasts/{id}', [PodcastController::class, 'destroy']);
 
+    // Видео
+    Route::get('/videos', [VideoController::class, 'index']);
     Route::post('/videos', [VideoController::class, 'store']);
     Route::put('/videos/{id}', [VideoController::class, 'update']);
-    Route::delete('/videos/{id}', [VideoController::class, 'destroy'])->middleware('can:update,video');
+    Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
+
+    // Профиль пользователя
+    Route::get('/users/{id}', [UserController::class, 'index']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
 });
 
 // Админские маршруты (только для администраторов)
-Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    // Управление пользователями (только для админа)
-    Route::get('/admin/users', [AdminController::class, 'getUsers']);
-    Route::delete('/admin/users/{id}', [AdminController::class, 'deleteUser']);
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Пользователи
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
-    // Управление всеми материалами (для админа)
-    Route::resource('/admin/articles', ArticleController::class);
-    Route::resource('/admin/podcasts', PodcastController::class);
-    Route::resource('/admin/videos', VideoController::class);
+    // Категории
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::post('/categories', [CategoryController::class, 'store']);
+    Route::put('/categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+
+    // Галереи
+    Route::get('/galleries', [GalleryController::class, 'index']);
+    Route::post('/galleries', [GalleryController::class, 'store']);
+    Route::put('/galleries/{id}', [GalleryController::class, 'update']);
+    Route::delete('/galleries/{id}', [GalleryController::class, 'destroy']);
+
+    // Новости
+    Route::get('/news', [NewsController::class, 'index']);
+    Route::post('/news', [NewsController::class, 'store']);
+    Route::put('/news/{id}', [NewsController::class, 'update']);
+    Route::delete('/news/{id}', [NewsController::class, 'destroy']);
+
+    // Материалы
+    Route::get('/materials', [MaterialController::class, 'index']);
+    Route::post('/materials', [MaterialController::class, 'store']);
+    Route::put('/materials/{id}', [MaterialController::class, 'update']);
+    Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
+
+    // Статьи
+    Route::get('/articles', [ArticleController::class, 'index']);
+    Route::post('/articles', [ArticleController::class, 'store']);
+    Route::put('/articles/{id}', [ArticleController::class, 'update']);
+    Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
+
+    // Подкасты
+    Route::get('/podcasts', [PodcastController::class, 'index']);
+    Route::post('/podcasts', [PodcastController::class, 'store']);
+    Route::put('/podcasts/{id}', [PodcastController::class, 'update']);
+    Route::delete('/podcasts/{id}', [PodcastController::class, 'destroy']);
+
+    // Видео
+    Route::get('/videos', [VideoController::class, 'index']);
+    Route::post('/videos', [VideoController::class, 'store']);
+    Route::put('/videos/{id}', [VideoController::class, 'update']);
+    Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
+
+    // Уведомления
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications', [NotificationController::class, 'store']);
+    Route::put('/notifications/{id}', [NotificationController::class, 'update']);    
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
+
+    // Типы уведомлений
+    Route::get('/type-notifications', [TypeNotificationController::class, 'index']);
+    Route::post('/type-notifications', [TypeNotificationController::class, 'store']);
+    Route::put('/type-notifications/{id}', [TypeNotificationController::class, 'update']);
+    Route::delete('/type-notifications/{id}', [TypeNotificationController::class, 'destroy']);
 });

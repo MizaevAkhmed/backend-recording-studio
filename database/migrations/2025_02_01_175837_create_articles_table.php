@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('articles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('material_id');
+            $table->foreignId('material_id'); // Ссылка на материал
+            $table->string('title'); // Название
             $table->text('content');  // Текст статьи
             $table->string('image')->nullable();  // Изображение статьи
+            $table->text('description'); // Краткое описание
             $table->timestamps();
 
             $table->foreign('material_id')->references('id')->on('materials')->onDelete('cascade');
