@@ -2,54 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Material;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Article;
 
 class ArticleController extends Controller
 {
-    // Получить все статьи
+    /**
+     * Получение списка всех статей.
+     */
     public function index()
     {
-        // Получить все статьи
-        return Material::where('category_id', 1)->get(); // Пример для статей
+        return response()->json(Article::all());
     }
 
-    // Получить одну статью
-    public function store(Request $request)
+    /**
+     * Получение статьи (открытие на отдельной странице).
+     */
+    public function show($id)
     {
-        // Для пользователя или администратора
-        $article = Material::create($request->all());
-        return response()->json($article, 201);
-    }
-
-    // Обновить статью
-    public function update(Request $request, $id)
-    {
-        $article = Material::findOrFail($id);
-
-        // Только для владельца материала или администратора
-        if (auth()->user()->id !== $article->id && auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Нет доступа'], 403);
-        }
-
-        $article->update($request->all());
+        $article = Article::findOrFail($id);
         return response()->json($article);
     }
 
-    // Удалить статью
-    public function destroy($id)
+    /**
+     * Редактирование новой статьи.
+     */
+    public function update(Request $request, $id)
     {
-        $article = Material::findOrFail($id);
+        // Находим статью по ID
+        $article = Article::findOrFail($id);
 
-        // Только для владельца материала или администратора
-        if (auth()->user()->id !== $article->id && auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Нет доступа'], 403);
+        // Валидируем входные данные
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'file' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',  // Валидируем изображение
+        ]);
+
+        // Если было загружено новое изображение, сохраняем его
+        if ($request->hasFile('file')) {
+            // Удаляем старое изображение, если оно было
+            if ($article->file_path && file_exists(public_path($article->file_path))) {
+                unlink(public_path($article->file_path));
+            }
+
+            // Сохраняем новое изображение
+            $filePath = $request->file('file')->store('articles_images', 'public');
+            $validated['file_path'] = $filePath;
         }
 
-        $article->delete();
-        return response()->json(['message' => 'Удалено успешно']);
+        // Обновляем статью
+        $article->update($validated);
+
+        return response()->json($article);
     }
 }
-
-

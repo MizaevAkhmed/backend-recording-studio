@@ -2,55 +2,134 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Material;
 use Illuminate\Http\Request;
+
+use App\Models\Material;
+use App\Models\Article;
+use App\Models\Podcast;
+use App\Models\Video;
+use App\Models\Category;
 
 class MaterialController extends Controller
 {
-    // Показать все материалы
+    // Получение списка всех материалов
     public function index()
     {
-        return Material::all();
+        $materials = Material::with('materialable')->get();
+        return response()->json($materials);
     }
 
-    // Показать один материал
-    public function show($id)
-    {
-        return Material::findOrFail($id);
-    }
+    // Получение списка материалов с категориями
+    public function getMaterialsWithCategories(Request $request) {
+        // Получаем категории для отображения
+        $categories = Category::whereIn('id', [1, 2, 3])->get();  // Отбираем категории 1-3
+        
+        // Получаем материалы, которые относятся к этим категориям
+        $materials = Material::with('materialable') // Загружаем связанные данные
+            ->whereIn('category_id', [1, 2, 3])
+            ->get();
+        
+        // Возвращаем данные в одном ответе
+        return response()->json([
+            'categories' => $categories,
+            'materials' => $materials
+        ]);
+    }    
 
-    // Создать материал
+    // Создание нового материала
     public function store(Request $request)
     {
-        $material = Material::create($request->all());
-        return response()->json($material, 201);
-    }
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
+            'type' => 'required|in:article,podcast,video',
+            'file_path' => 'nullable|string',
+            'content' => 'nullable|string',
+        ]);
 
-    // Обновить материал
-    public function update(Request $request, $id)
-    {
-        $material = Material::findOrFail($id);
+        $user = auth()->user();
 
-        // Только для владельца материала или администратора
-        if (auth()->user()->id !== $material->user_id && auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Нет доступа'], 403);
+        // Определяем, какой тип материала создаем
+        $materialable = null;
+
+        if ($request->type === 'article') {
+            $materialable = Article::create([
+                'title' => $request->title,
+                'content' => $request->content,
+                'file_path' => $request->file_path,
+                'description' => $request->description,
+            ]);
+        } elseif ($request->type === 'podcast') {
+            $materialable = Podcast::create([
+                'title' => $request->title,
+                'file_path' => $request->file_path,
+                'description' => $request->description,
+            ]);
+        } elseif ($request->type === 'video') {
+            $materialable = Video::create([
+                'title' => $request->title,
+                'file_path' => $request->file_path,
+            ]);
         }
 
-        $material->update($request->all());
+        if ($materialable) {
+            $material = Material::create([
+                'user_id' => $user->id,
+                'category_id' => $request->category_id,
+                'materialable_id' => $materialable->id,
+                'materialable_type' => get_class($materialable),
+            ]);
+
+            return response()->json($material->load('materialable'), 201);
+        }
+
+        return response()->json(['error' => 'Ошибка при создании материала'], 400);
+    }
+
+    // Получение одного материала
+    public function show($id)
+    {
+        $material = Material::with('materialable')->findOrFail($id);
         return response()->json($material);
     }
 
-    // Удалить материал
+    // Обновление материала (админ, автор материала)
+    public function update(Request $request, $id)
+    {
+        $material = Material::findOrFail($id);
+        $user = auth()->user();
+
+        // Только автор или админ может редактировать
+        if ($user->id !== $material->user_id && $user->type_user !== 'admin') {
+            return response()->json(['error' => 'Нет прав на редактирование'], 403);
+        }
+
+        $materialable = $material->materialable;
+
+        if ($materialable) {
+            $materialable->update($request->only(['title', 'description', 'file_path', 'content']));
+        }
+
+        $material->update($request->only(['category_id']));
+
+        return response()->json($material->load('materialable'));
+    }
+
+    // Удаление материала (автор или админ).
     public function destroy($id)
     {
         $material = Material::findOrFail($id);
+        $user = auth()->user();
 
-        // Только для владельца материала или администратора
-        if (auth()->user()->id !== $material->user_id && auth()->user()->role !== 'admin') {
-            return response()->json(['message' => 'Нет доступа'], 403);
+        // Только автор или админ может удалять
+        if ($user->id !== $material->user_id && $user->type_user !== 'admin') {
+            return response()->json(['error' => 'Нет прав на удаление'], 403);
         }
 
+        $material->materialable->delete();
         $material->delete();
-        return response()->json(['message' => 'Удалено успешно']);
+
+        return response()->json(['message' => 'Материал удален']);
     }
 }

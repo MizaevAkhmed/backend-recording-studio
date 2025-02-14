@@ -12,7 +12,7 @@ class CategoryController extends Controller
     {
         return Category::all();
     }
-
+    
     // Получить одну категорию
     public function store(Request $request)
     {

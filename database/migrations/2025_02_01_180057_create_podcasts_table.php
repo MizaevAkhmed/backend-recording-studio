@@ -13,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('podcasts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('material_id');
-            $table->string('title'); // Название
-            $table->text('description'); // Краткое описание
-            $table->string('file_path');  // Путь к аудиофайлу
+            $table->string('title');
+            $table->text('description');
+            $table->string('file_path'); // Путь к аудиофайлу
             $table->timestamps();
-
-            $table->foreign('material_id')->references('id')->on('materials')->onDelete('cascade');
         });
     }
 

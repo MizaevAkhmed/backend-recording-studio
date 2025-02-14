@@ -4,17 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Video extends Model
 {
     use HasFactory;
 
-    // Столбцы, которые могут быть массово назначены
-    protected $fillable = ['material_id', 'title', 'file_path'];
+    protected $fillable = ['title', 'file_path'];
 
-    // Связь с материалом
-    public function material()
+    public function material(): MorphOne
     {
-        return $this->belongsTo(Material::class); // Каждое видео связано с одним материалом
+        return $this->morphOne(Material::class, 'materialable');
     }
 }

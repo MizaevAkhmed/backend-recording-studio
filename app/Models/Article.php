@@ -4,17 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Article extends Model
 {
     use HasFactory;
 
-    // Столбцы, которые могут быть массово назначены
-    protected $fillable = ['material_id', 'title', 'content', 'image', 'description'];
+    protected $fillable = ['title', 'content', 'file_path', 'description'];
 
-    // Связь с материалом
-    public function material()
+    public function material(): MorphOne
     {
-        return $this->belongsTo(Material::class); // Каждый article связан с одним материалом
+        return $this->morphOne(Material::class, 'materialable');
     }
 }
+

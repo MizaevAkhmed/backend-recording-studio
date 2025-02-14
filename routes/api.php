@@ -30,8 +30,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
+    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
 
     // Статьи
+    Route::get('/articles{id}', [ArticleController::class, 'show']);
     Route::post('/articles', [ArticleController::class, 'store']);
     Route::put('/articles/{id}', [ArticleController::class, 'update']);
     Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
