@@ -16,7 +16,7 @@ class MaterialSeeder extends Seeder
         $article = Article::create([
             'title' => 'Как писать код',
             'content' => 'Это учебная статья о программировании...',
-            'file_path' => 'uploads/articles/code.jpg',
+            'file_path' => 'uploads\images\background-studio.jpg',
             'description' => 'Основы программирования на Laravel',
         ]);
 
