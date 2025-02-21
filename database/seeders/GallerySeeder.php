@@ -13,12 +13,12 @@ class GallerySeeder extends Seeder
             'title' => 'Запись подкаста на студии',
             'description' => 'Студенты записывают подкаст на студии клуба.',
             'category_id' => '4',
-            'file_path' => 'image1.jpg',
+            'file_path' => 'uploads\images\students_record_of_podcast.webp',
         ]);
 
         Gallery::create([
             'title' => 'Учебная лекция',
-            'description' => 'Преподаватель проводит лекцию по звукозаписи.',
+            'description' => 'Преподаватель проводит учебную лекцию.',
             'category_id' => '4',
             'file_path' => 'image2.jpg',
         ]);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Gallery;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class GalleryController extends Controller
@@ -12,6 +13,23 @@ class GalleryController extends Controller
     {
         return Gallery::all();
     }
+
+    // Получение данных из галереи с категориями
+    public function getGaleryWithCategories(Request $request) {
+        // Получаем категории для отображения
+        $categories = Category::whereIn('id', [4, 5])->get();  // Отбираем категории 4-5
+        
+        // Получаем материалы, которые относятся к этим категориям
+        $galleries = Gallery::with('materialable') // Загружаем связанные данные
+            ->whereIn('category_id', [4, 5])
+            ->get();
+        
+        // Возвращаем данные в одном ответе
+        return response()->json([
+            'categories' => $categories,
+            'galleries' => $galleries
+        ]);
+    }   
 
     // Получить одну галерею
     public function show($id)

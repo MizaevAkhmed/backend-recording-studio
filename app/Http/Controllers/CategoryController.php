@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Gallery;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -12,8 +13,7 @@ class CategoryController extends Controller
     {
         return Category::all();
     }
-    
-    // Получить одну категорию
+
     public function store(Request $request)
     {
         // Только для администратора
