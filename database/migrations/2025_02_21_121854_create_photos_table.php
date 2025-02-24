@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('videos', function (Blueprint $table) {
+        Schema::create('photos', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('file_path'); // Путь к видеофайлу
+            $table->string('file_path');
             $table->text('description')->nullable();
             $table->timestamps();
         });

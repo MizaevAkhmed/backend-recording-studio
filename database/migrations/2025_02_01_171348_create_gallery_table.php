@@ -13,13 +13,8 @@ return new class extends Migration
     {
         Schema::create('gallery', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->unsignedBigInteger('category_id');
-            $table->string('file_path');
+            $table->morphs('galleryable'); // Поля galleryable_id и galleryable_type
             $table->timestamps();
-    
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
         });
     }
 
