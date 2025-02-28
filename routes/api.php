@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
@@ -12,13 +11,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PodcastController;
 use App\Http\Controllers\TypeNotificationController;
 use App\Http\Controllers\VideoController;
+use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\UserController;
 
 // Публичные маршруты (доступны всем)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/categories', [CategoryController::class, 'index']); // Получить все категории
-Route::get('/galleries', [GalleryController::class, 'index']); // Получить все галереи
 Route::get('/news', [NewsController::class, 'index']); // Получить все новости
 
 // Защищенные маршруты (только для аутентифицированных пользователей)
@@ -30,7 +29,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
+    Route::get('/materialsWithCategories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
+
+    // Галереи
+    Route::get('/galleries', [GalleryController::class, 'index']);
+    Route::get('/galleriesWithCategories', [GalleryController::class, 'getGaleryWithCategories']); // Получение списка галереи с категориями
 
     // Статьи
     Route::get('/articles{id}', [ArticleController::class, 'show']);
@@ -49,6 +52,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/videos', [VideoController::class, 'store']);
     Route::put('/videos/{id}', [VideoController::class, 'update']);
     Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
+
+    // Фото
+    Route::get('/photos', [PhotoController::class, 'index']);
+    Route::post('/photos', [PhotoController::class, 'store']);
+    Route::put('/photos/{id}', [PhotoController::class, 'update']);
+    Route::delete('/photos/{id}', [PhotoController::class, 'destroy']);
 
     // Профиль пользователя
     Route::get('/users/{id}', [UserController::class, 'index']);
@@ -104,6 +113,12 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/videos', [VideoController::class, 'store']);
     Route::put('/videos/{id}', [VideoController::class, 'update']);
     Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
+
+    // Фото
+    Route::get('/photos', [PhotoController::class, 'index']);
+    Route::post('/photos', [PhotoController::class, 'store']);
+    Route::put('/photos/{id}', [PhotoController::class, 'update']);
+    Route::delete('/photos/{id}', [PhotoController::class, 'destroy']);
 
     // Уведомления
     Route::get('/notifications', [NotificationController::class, 'index']);

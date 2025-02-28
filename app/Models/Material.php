@@ -10,7 +10,14 @@ class Material extends Model
 {
     use HasFactory;
 
+    protected $table = 'materials';
+
     protected $fillable = ['user_id', 'category_id', 'materialable_id', 'materialable_type'];
+
+    public function category() 
+    {
+        return $this->belongsTo(Category::class);
+    }
 
     public function materialable(): MorphTo
     {

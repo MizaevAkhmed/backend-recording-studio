@@ -15,15 +15,13 @@ class PhotoSeeder extends Seeder
         Photo::create([
             'title' => 'Запись подкаста на студии',
             'description' => 'Студенты записывают подкаст на студии клуба.',
-            'category_id' => '4',
             'file_path' => 'uploads\images\students_record_of_podcast.webp',
         ]);
 
         Photo::create([
-            'title' => 'Фото студии клуба',
+            'title' => 'Фото студии для подкаста',
             'description' => 'Фото студии клуба.',
-            'category_id' => '4',
-            'file_path' => 'uploads\images\photo-studio-for-podcasts.jpeg',
+            'file_path' => 'uploads\images\showcasing audio recording for learning materials.png',
         ]);
     }
 }

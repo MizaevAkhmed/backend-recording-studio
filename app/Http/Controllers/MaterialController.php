@@ -20,13 +20,16 @@ class MaterialController extends Controller
     }
 
     // Получение списка материалов с категориями
-    public function getMaterialsWithCategories(Request $request) {
+    public function getMaterialsWithCategories() {
+        // Фиксированные категории (1, 2, 3)
+        $categoryIds = [1, 2, 3];
+
         // Получаем категории для отображения
-        $categories = Category::whereIn('id', [1, 2, 3])->get();  // Отбираем категории 1-3
-        
+        $categories = Category::whereIn('id', $categoryIds)->get();
+
         // Получаем материалы, которые относятся к этим категориям
-        $materials = Material::with('materialable') // Загружаем связанные данные
-            ->whereIn('category_id', [1, 2, 3])
+        $materials = Material::with('materialable')  // Загружаем связанные данные
+            ->whereIn('category_id', $categoryIds)
             ->get();
         
         // Возвращаем данные в одном ответе

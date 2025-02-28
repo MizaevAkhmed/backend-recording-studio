@@ -15,13 +15,16 @@ class GalleryController extends Controller
     }
 
     // Получение данных из галереи с категориями
-    public function getGaleryWithCategories(Request $request) {
+    public function getGaleryWithCategories() {
+        // Фиксированные категории (4, 5)
+        $galleryIds = [4, 5];
+
         // Получаем категории для отображения
-        $categories = Category::whereIn('id', [4, 5])->get();  // Отбираем категории 4-5
-        
+        $categories = Category::whereIn('id', $galleryIds)->get();
+
         // Получаем материалы, которые относятся к этим категориям
-        $galleries = Gallery::with('materialable') // Загружаем связанные данные
-            ->whereIn('category_id', [4, 5])
+        $galleries = Gallery::with('galleryable')  // Загружаем связанные данные
+            ->whereIn('category_id', $galleryIds)
             ->get();
         
         // Возвращаем данные в одном ответе

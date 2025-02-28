@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('gallery', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade'); // Категория
             $table->morphs('galleryable'); // Поля galleryable_id и galleryable_type
             $table->timestamps();
         });
