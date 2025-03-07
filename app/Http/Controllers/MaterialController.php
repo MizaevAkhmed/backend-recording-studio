@@ -26,8 +26,16 @@ class MaterialController extends Controller
 
     public function store(Request, $request)
     {
+        // Валидация входных данных
         $validated = $request->validate([
-            'user_id' => 
-        ])
+            'title' => 'required|string|max:255',
+            'data_type_id' => 'requires|exists:data_types,id',
+            'file_path' => 'nullable|string',
+            'content' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        // Добавляем ID текущего пользователя (автор записи)
+        $validated['user_id'] = $request->user()->id;
     }
 }
