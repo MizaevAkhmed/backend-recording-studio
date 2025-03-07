@@ -9,6 +9,8 @@ class Notification extends Model
 {
     use HasFactory;
 
+    protected $table = 'notifications';
+
     protected $fillable = [
         'user_id',
         'type_notification_id',
@@ -19,12 +21,12 @@ class Notification extends Model
     // Связь с пользователем
     public function user()
     {
-        return $this->belongsTo(User::class); // Связь с пользователем
+        return $this->belongsTo(User::class);
     }
 
     // Связь с типом уведомления
     public function typeNotification()
     {
-        return $this->belongsTo(TypeNotification::class, 'type_notification_id'); // Связь с типом уведомления
+        return $this->belongsTo(TypeNotification::class, 'type_notification_id');
     }
 }

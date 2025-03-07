@@ -10,16 +10,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
-            CategorySeeder::class,
-            ArticleSeeder::class,
-            PodcastSeeder::class,
-            VideoSeeder::class,
-            PhotoSeeder::class,
-            MaterialSeeder::class,
-            GallerySeeder::class,
-            NewsSeeder::class,
+            DataTypeSeeder::class,
+            NonworkingDaySeeder::class,
             TypeNotificationSeeder::class,
             NotificationSeeder::class,
+            BookingSeeder::class,
+            MaterialSeeder::class,
+            NewsSeeder::class,
         ]);
     }
 }

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\NewsController;
@@ -24,16 +25,18 @@ Route::get('/news', [NewsController::class, 'index']); // Получить вс�
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
+    // Бронирование студии
+    Route::get('/booking', [BookingController::class, 'index']);
+    Route::post('/booking', [BookingController::class, 'store']);
+    Route::put('/booking/{id}', [BookingController::class, 'update']);
+
     // Материалы
     Route::get('/materials', [MaterialController::class, 'index']);
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-    Route::get('/materialsWithCategories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
 
-    // Галереи
-    Route::get('/galleries', [GalleryController::class, 'index']);
-    Route::get('/galleriesWithCategories', [GalleryController::class, 'getGaleryWithCategories']); // Получение списка галереи с категориями
+    Route::get('/materialsWithCategories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
 
     // Статьи
     Route::get('/articles{id}', [ArticleController::class, 'show']);
@@ -78,11 +81,11 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/categories/{id}', [CategoryController::class, 'update']);
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
-    // Галереи
-    Route::get('/galleries', [GalleryController::class, 'index']);
-    Route::post('/galleries', [GalleryController::class, 'store']);
-    Route::put('/galleries/{id}', [GalleryController::class, 'update']);
-    Route::delete('/galleries/{id}', [GalleryController::class, 'destroy']);
+    // Бронирование студии
+    Route::get('/booking', [BookingController::class, 'index']);
+    Route::post('/booking', [BookingController::class, 'store']);
+    Route::put('/booking/{id}', [BookingController::class, 'update']);
+    Route::delete('/booking/{id}', [BookingController::class, 'destroy']);
 
     // Новости
     Route::get('/news', [NewsController::class, 'index']);

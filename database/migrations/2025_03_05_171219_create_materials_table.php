@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Автор материала
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade'); // Категория
-            $table->morphs('materialable'); // Полиморфная связь
+            $table->foreignId('user_id')->constrained('users'); // Автор материала
+            $table->string('title');
+            $table->foreignId('data_type_id')->constrained('data_types'); // Тип материала
+            $table->string('file_path')->nullable();
+            $table->mediumText('content')->nullable();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }

@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('articles', function (Blueprint $table) {
+        Schema::create('booking', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->text('content');
-            $table->string('file_path')->nullable(); // Путь к изображению
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('data_type_id')->constrained('data_types');
             $table->text('description');
+            $table->datetime('recording_start_date');
+            $table->datetime('end_date_of_recording');
+            $table->enum('status', ['booked', 'cancelled', 'pending'])->default('pending');
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('articles');
+        Schema::dropIfExists('booking');
     }
 };

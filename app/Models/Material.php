@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Material extends Model
@@ -12,16 +13,18 @@ class Material extends Model
 
     protected $table = 'materials';
 
-    protected $fillable = ['user_id', 'category_id', 'materialable_id', 'materialable_type'];
+    protected $fillable = [
+        'user_id',
+        'title',
+        'data_type_id',
+        'file_path',
+        'content',
+        'description',
+    ];
 
-    public function category() 
+    public function dataType()
     {
-        return $this->belongsTo(Category::class);
-    }
-
-    public function materialable(): MorphTo
-    {
-        return $this->morphTo();
+        return $this->belongsTo(DataType::class, 'data_type_id');
     }
 }
 
