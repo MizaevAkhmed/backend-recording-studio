@@ -15,8 +15,8 @@ class MaterialController extends Controller
     public function show($id)
     {
         $material = Material::findOrFail($id);
-        
-        if (!$material){
+
+        if (!$material) {
             return response()->json(['error' => 'Материал не найден'], 404);
         }
 
@@ -49,13 +49,41 @@ class MaterialController extends Controller
     {
         $material = Material::findOrFail($id);
 
-        // if()
+        // Проверяем, может ли пользователь обновлять этот материал
+        if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
+            return response()->json(['error' => 'У вас нет доступа'], 403);
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'data_type_id' => 'required|exists:data_types,id',
+            'file_path' => 'nullable|string',
+            'content' => 'nullable|string',
+            'description' => 'nullable|string'
+        ]);
+
+        $material->update($validated);
+
+        return response()->json([
+            'data' => $material,
+            'message' => 'Материал успешно обновлен'
+        ], 200);
     }
 
     public function destroy(Request $request, $id)
     {
         $material = Material::findOrFail($id);
-        
-        
+
+        if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
+            return response()->json([
+                'error' => 'У вас нет прав для обновления этого материала'
+            ], 403);
+        }
+
+        $material->destroy();
+
+        return response()->json([
+            'message' => 'Материал успешно удален'
+        ], 200);
     }
 }
