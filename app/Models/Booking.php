@@ -13,7 +13,7 @@ class Booking extends Model
 
     protected $fillable = [
         'user_id',
-        'record_type_id',
+        'data_type_id',
         'description',
         'recording_start_date',
         'end_date_of_recording',
@@ -27,8 +27,8 @@ class Booking extends Model
     }
 
     // Связь с таблицей тип записи
-    public function RecordType()
+    public function DataType()
     {
-        return $this->BelongsTo(RecordType::class, 'record_type_id');
+        return $this->BelongsTo(DataType::class, 'data_type_id');
     }
 }
