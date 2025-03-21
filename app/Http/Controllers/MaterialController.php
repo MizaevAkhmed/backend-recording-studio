@@ -76,7 +76,7 @@ class MaterialController extends Controller
 
         if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
             return response()->json([
-                'error' => 'У вас нет прав для обновления этого материала'
+                'error' => 'У вас нет прав для удаления этого материала'
             ], 403);
         }
 
@@ -85,5 +85,9 @@ class MaterialController extends Controller
         return response()->json([
             'message' => 'Материал успешно удален'
         ], 200);
+    }
+
+    public function getMaterialsWithDataTypes(){
+        
     }
 }

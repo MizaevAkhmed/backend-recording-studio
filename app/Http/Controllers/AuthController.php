@@ -15,14 +15,18 @@ class AuthController extends Controller
     {
         // Валидация входных данных
         $validated = $request->validate([
+            'firstname' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'photo_profile' => 'nullable|string|max:255',
+            'email' => 'required|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         // Создание нового пользователя
         $user = User::create([
+            'firstname' => $validated['firstname'],
             'name' => $validated['name'],
+            'photo_profile' => $validated['photo_profile'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => 'student', // по умолчанию роль студента

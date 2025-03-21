@@ -1,66 +1,42 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\BookingController;
-use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\DataTypeController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\NonworkingDaysController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PodcastController;
 use App\Http\Controllers\TypeNotificationController;
-use App\Http\Controllers\VideoController;
-use App\Http\Controllers\PhotoController;
 use App\Http\Controllers\UserController;
 
 // Публичные маршруты (доступны всем)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/categories', [CategoryController::class, 'index']); // Получить все категории
 Route::get('/news', [NewsController::class, 'index']); // Получить все новости
 
 // Защищенные маршруты (только для аутентифицированных пользователей)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Профиль пользователя
+    Route::get('/profile/{id}', [UserController::class, 'show']);
+    Route::put('/profile/{id}', [UserController::class, 'update']);
+    Route::delete('/profile/{id}', [UserController::class, 'delete']);
+
+    // Выйти из учетной записи
     Route::post('/logout', [AuthController::class, 'logout']);
     
     // Бронирование студии
     Route::get('/booking', [BookingController::class, 'index']);
     Route::post('/booking', [BookingController::class, 'store']);
     Route::put('/booking/{id}', [BookingController::class, 'update']);
+    Route::get('/getBookingData', [BookingController::class, 'getBookingData']); // Получение праздников и забронированных дней для отображения их в календаре при бронировании
 
     // Материалы
-    Route::get('/materials', [MaterialController::class, 'index']);
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-
-    Route::get('/materialsWithCategories', [MaterialController::class, 'getMaterialsWithCategories']); // Получение списка материалов с категориями
-
-    // Статьи
-    Route::get('/articles{id}', [ArticleController::class, 'show']);
-    Route::post('/articles', [ArticleController::class, 'store']);
-    Route::put('/articles/{id}', [ArticleController::class, 'update']);
-    Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
-
-    // Подкасты
-    Route::get('/podcasts', [PodcastController::class, 'index']);
-    Route::post('/podcasts', [PodcastController::class, 'store']);
-    Route::put('/podcasts/{id}', [PodcastController::class, 'update']);
-    Route::delete('/podcasts/{id}', [PodcastController::class, 'destroy']);
-
-    // Видео
-    Route::get('/videos', [VideoController::class, 'index']);
-    Route::post('/videos', [VideoController::class, 'store']);
-    Route::put('/videos/{id}', [VideoController::class, 'update']);
-    Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
-
-    // Фото
-    Route::get('/photos', [PhotoController::class, 'index']);
-    Route::post('/photos', [PhotoController::class, 'store']);
-    Route::put('/photos/{id}', [PhotoController::class, 'update']);
-    Route::delete('/photos/{id}', [PhotoController::class, 'destroy']);
+    Route::get('/materials-with-data-types', [MaterialController::class, 'getMaterialsWithDataTypes']); // Получение сортированного списка материалов с типами данных
 
     // Профиль пользователя
     Route::get('/users/{id}', [UserController::class, 'index']);
@@ -75,17 +51,23 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
-    // Категории
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
+    // Типы данных используемых для сортировки материалов и для указания типа данных при бронировании 
+    Route::get('/data-types', [DataTypeController::class, 'index']);
+    Route::post('/data-types', [DataTypeController::class, 'store']);
+    Route::put('/data-types/{id}', [DataTypeController::class, 'update']);
+    Route::delete('/data-types/{id}', [DataTypeController::class, 'destroy']);
 
     // Бронирование студии
     Route::get('/booking', [BookingController::class, 'index']);
     Route::post('/booking', [BookingController::class, 'store']);
     Route::put('/booking/{id}', [BookingController::class, 'update']);
     Route::delete('/booking/{id}', [BookingController::class, 'destroy']);
+
+    // Выходные дни в календаре
+    Route::get('/nonworking-days', [NonworkingDaysController::class, 'index']);
+    Route::post('/nonworking-days', [NonworkingDaysController::class, 'store']);
+    Route::put('/nonworking-days/{id}', [NonworkingDaysController::class, 'update']);
+    Route::delete('/nonworking-days/{id}', [NonworkingDaysController::class, 'destroy']);
 
     // Новости
     Route::get('/news', [NewsController::class, 'index']);
@@ -98,30 +80,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-
-    // Статьи
-    Route::get('/articles', [ArticleController::class, 'index']);
-    Route::post('/articles', [ArticleController::class, 'store']);
-    Route::put('/articles/{id}', [ArticleController::class, 'update']);
-    Route::delete('/articles/{id}', [ArticleController::class, 'destroy']);
-
-    // Подкасты
-    Route::get('/podcasts', [PodcastController::class, 'index']);
-    Route::post('/podcasts', [PodcastController::class, 'store']);
-    Route::put('/podcasts/{id}', [PodcastController::class, 'update']);
-    Route::delete('/podcasts/{id}', [PodcastController::class, 'destroy']);
-
-    // Видео
-    Route::get('/videos', [VideoController::class, 'index']);
-    Route::post('/videos', [VideoController::class, 'store']);
-    Route::put('/videos/{id}', [VideoController::class, 'update']);
-    Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
-
-    // Фото
-    Route::get('/photos', [PhotoController::class, 'index']);
-    Route::post('/photos', [PhotoController::class, 'store']);
-    Route::put('/photos/{id}', [PhotoController::class, 'update']);
-    Route::delete('/photos/{id}', [PhotoController::class, 'destroy']);
 
     // Уведомления
     Route::get('/notifications', [NotificationController::class, 'index']);
