@@ -6,6 +6,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DataTypeController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controller\NewsCategoryController;
 use App\Http\Controllers\NonworkingDaysController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TypeNotificationController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\UserController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/news', [NewsController::class, 'index']); // Получить все новости
+Route::get('/news-categories', [NewsCategoryController::class, 'index']); // Получить все категории для новостей
 
 // Защищенные маршруты (только для аутентифицированных пользователей)
 Route::middleware(['auth:sanctum'])->group(function () {

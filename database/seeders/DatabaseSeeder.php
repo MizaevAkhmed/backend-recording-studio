@@ -16,7 +16,9 @@ class DatabaseSeeder extends Seeder
             NotificationSeeder::class,
             BookingSeeder::class,
             MaterialSeeder::class,
+            NewsCategorySeeder::class,
             NewsSeeder::class,
+            NewsPhotoSeeder::class
         ]);
     }
 }

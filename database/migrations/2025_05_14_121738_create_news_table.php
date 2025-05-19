@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('news', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('file_path')->nullable();
             $table->text('content');
+            $table->date('date');
+            $table->string('location')->nullable();
+            $table->foreignId('category_id')->nullable()->constrained('news_categories')->nullOnDelete();
             $table->timestamps();
         });
     }
