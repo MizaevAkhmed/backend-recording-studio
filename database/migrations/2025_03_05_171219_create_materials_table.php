@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users'); // Автор материала
             $table->string('title');
             $table->foreignId('data_type_id')->constrained('data_types'); // Тип материала
-            $table->string('file_path')->nullable();
+            $table->string('file')->nullable();
             $table->mediumText('content')->nullable();
             $table->string('description')->nullable();
             $table->timestamps();

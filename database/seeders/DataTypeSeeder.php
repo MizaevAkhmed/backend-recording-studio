@@ -19,7 +19,7 @@ class DataTypeSeeder extends Seeder
         ]);
 
         DataType::create([
-            'name' => 'тестовый тип',
+            'name' => 'статья',
             'description' => 'тестовый тип данных',
         ]);
 

@@ -7,7 +7,6 @@ use App\Models\DataType;
 use App\Models\NonworkingDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use DateTime;
 
 class BookingController extends Controller

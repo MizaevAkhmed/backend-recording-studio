@@ -9,12 +9,26 @@ use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
+    // Получение всех новостей вместе с категориями
+    public function getNewsAndCategories()
+    {
+        // Получаем категории
+        $categories = NewsCategory::all();
+
+        // Получаем новости с фотографиями и категориями
+        $news = News::with('photos')->get();
+
+        return response()->json([
+            'categories' => $categories,
+            'news' => $news,
+        ]);
+    }
+
     // Получение всех новостей
     public function index()
     {
-        // Подгружаем только нужные поля для новостей и фотографий
-        return News::with('photos:id,news_id,path')  // Загрузка фото
-            ->select('id', 'title', 'content', 'date', 'location', 'category_id')  // Загрузка только нужных полей для новостей
+        return News::with('photos:id,news_id,path')
+            ->select('id', 'title', 'content', 'date', 'location', 'category_id')
             ->get();
     }
 
@@ -50,7 +64,7 @@ class NewsController extends Controller
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
                 // Сохранение файла в директории 'news_photos'
-                $path = $file->store('news_photos', 'public');
+                $path = $file->store('uploads/news_photos', 'public');
                 // Создание связи с фото
                 $news->photos()->create(['path' => $path]);
             }
@@ -103,7 +117,7 @@ class NewsController extends Controller
 
         $news = News::findOrFail($id);
 
-        // Удаление всех фото
+        // Удаление фото при удалении новости
         foreach ($news->photos as $photo) {
             Storage::delete('public/' . $photo->path); // Удаляем фото с сервера
             $photo->delete(); // Удаляем запись в базе данных

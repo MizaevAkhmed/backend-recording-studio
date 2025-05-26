@@ -6,7 +6,6 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\DataTypeController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\NewsController;
-use App\Http\Controller\NewsCategoryController;
 use App\Http\Controllers\NonworkingDaysController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\TypeNotificationController;
@@ -15,8 +14,7 @@ use App\Http\Controllers\UserController;
 // Публичные маршруты (доступны всем)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/news', [NewsController::class, 'index']); // Получить все новости
-Route::get('/news-categories', [NewsCategoryController::class, 'index']); // Получить все категории для новостей
+Route::get('/news-with-categories', [NewsController::class, 'getNewsAndCategories']); // Получить все новости вместе с категориями
 
 // Защищенные маршруты (только для аутентифицированных пользователей)
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -38,11 +36,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-    Route::get('/materials-with-data-types', [MaterialController::class, 'getMaterialsWithDataTypes']); // Получение сортированного списка материалов с типами данных
+    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsAndCategories']); // Получение сортированного списка материалов с типами данных
 
-    // Профиль пользователя
-    Route::get('/users/{id}', [UserController::class, 'index']);
-    Route::put('/users/{id}', [UserController::class, 'update']);
+    // // Профиль пользователя
+    // Route::get('/users/{id}', [UserController::class, 'index']);
+    // Route::put('/users/{id}', [UserController::class, 'update']);
 });
 
 // Админские маршруты (только для администраторов)

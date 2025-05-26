@@ -4,9 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Material;
+use App\Models\DataType;
 
 class MaterialController extends Controller
 {
+    public function getMaterialsAndCategories()
+    {
+        $categories = DataType::all(); // категории материалов (типы данных)
+        $materials = Material::with('dataType')->get(); // материалы с подгруженной категорией
+
+        return response()->json([
+            'categories' => $categories,
+            'materials' => $materials,
+        ]);
+    }
+
     public function index()
     {
         return Material::all();
@@ -25,19 +37,29 @@ class MaterialController extends Controller
 
     public function store(Request $request)
     {
-        // Валидация входных данных
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'data_type_id' => 'required|exists:data_types,id',
-            'file_path' => 'nullable|string',
+            'file' => 'nullable|file|max:102400|mimes:mp4,mp3,avi,doc,docx,pdf',
+            'external_link' => 'nullable|url',
             'content' => 'nullable|string',
             'description' => 'nullable|string',
         ]);
 
-        // Добавляем ID текущего пользователя (автор записи)
         $validated['user_id'] = $request->user()->id;
 
-        $material = Material::Create($validated);
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('materials', 'public');
+            $validated['file'] = 'storage/' . $path;
+        } elseif ($request->filled('external_link')) {
+            $validated['file'] = $request->input('external_link');
+        } else {
+            $validated['file'] = null;
+        }
+
+        unset($validated['external_link']);
+
+        $material = Material::create($validated);
 
         return response()->json([
             'message' => 'Материал создан',
@@ -49,7 +71,6 @@ class MaterialController extends Controller
     {
         $material = Material::findOrFail($id);
 
-        // Проверяем, может ли пользователь обновлять этот материал
         if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
             return response()->json(['error' => 'У вас нет доступа'], 403);
         }
@@ -57,37 +78,45 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'data_type_id' => 'required|exists:data_types,id',
-            'file_path' => 'nullable|string',
+            'file' => 'nullable|file|max:102400|mimes:mp4,mp3,avi,doc,docx,pdf',
+            'external_link' => 'nullable|url',
             'content' => 'nullable|string',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
+
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('materials', 'public');
+            $validated['file'] = 'storage/' . $path;
+        } elseif ($request->filled('external_link')) {
+            $validated['file'] = $request->input('external_link');
+        } // иначе не трогаем старое значение
+
+        unset($validated['external_link']);
 
         $material->update($validated);
 
         return response()->json([
             'data' => $material,
-            'message' => 'Материал успешно обновлен'
+            'message' => 'Материал успешно обновлён'
         ], 200);
     }
+
 
     public function destroy(Request $request, $id)
     {
         $material = Material::findOrFail($id);
 
+        // Проверка прав: только админ или автор может удалить
         if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
             return response()->json([
                 'error' => 'У вас нет прав для удаления этого материала'
             ], 403);
         }
 
-        $material->destroy();
+        $material->delete();
 
         return response()->json([
             'message' => 'Материал успешно удален'
         ], 200);
-    }
-
-    public function getMaterialsWithDataTypes(){
-        
     }
 }

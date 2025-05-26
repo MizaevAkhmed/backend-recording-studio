@@ -11,6 +11,12 @@ class NewsPhoto extends Model
 
     protected $fillable = ['news_id', 'path'];
 
+    public function getPathAttribute($value)
+    {
+        $normalizedPath = str_replace('\\', '/', $value);
+        return asset('storage/' . $normalizedPath);
+    }
+
     // Связь с моделью News (многие к одному)
     public function news()
     {

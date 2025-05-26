@@ -16,7 +16,7 @@ class Material extends Model
         'user_id',
         'title',
         'data_type_id',
-        'file_path',
+        'file',
         'content',
         'description',
     ];
