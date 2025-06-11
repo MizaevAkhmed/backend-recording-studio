@@ -18,13 +18,8 @@ class User extends Authenticatable
         'photo_profile',
         'email',
         'password',
+        'type_user'
     ];
-
-    // Определение связи с материалами
-    public function materials()
-    {
-        return $this->hasMany(Material::class); // Один пользователь может иметь много материалов
-    }
 
     protected $hidden = [
         'password',
@@ -36,7 +31,13 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function isAdmin()
+    // Определение связи с материалами
+    public function materials()
+    {
+        return $this->hasMany(Material::class); // Один пользователь может иметь много материалов
+    }
+
+    public function isAdmin(): bool
     {
         return $this->type_user === 'admin';
     }

@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('data_type_id')->constrained('data_types');
             $table->text('description');
-            $table->datetime('recording_start_date');
-            $table->datetime('end_date_of_recording');
-            $table->enum('status', ['booked', 'cancelled', 'pending'])->default('pending');
+            $table->date('recording_start_date');
+            $table->date('end_date_of_recording');
+            $table->enum('status', ['pending','approved','rejected','booked','cancelled'])->default('pending');
             $table->timestamps();
         });
     }

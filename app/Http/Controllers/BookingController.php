@@ -11,16 +11,26 @@ use DateTime;
 
 class BookingController extends Controller
 {
-    // Получение всех бронирований для администратора или текущего пользователя
-    public function index()
+    // Получение списка бронирований текущего пользователя
+    public function userBookings()
     {
-        if (Auth::check() && Auth::user()->isAdmin()) { // Проверяем, если пользователь - администратор
-            $bookings = Booking::all();
-        } else {
-            $bookings = Booking::where('user_id', Auth::id())->get();
+        return response()->json(
+            Booking::with(['dataType'])
+                ->where('user_id', Auth::id())
+                ->get()
+        );
+    }
+
+    // Получение списка бронирований для админа
+    public function adminBookings()
+    {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        return response()->json($bookings);
+        return response()->json(
+            Booking::with(['user', 'type'])->get()
+        );
     }
 
     // Просмотр конкретного бронирования
@@ -46,7 +56,7 @@ class BookingController extends Controller
             'description' => $request->description,
             'recording_start_date' => $request->recording_start_date,
             'end_date_of_recording' => $request->end_date_of_recording,
-            'status' => 'booked'
+            'status' => 'pending'
         ]);
 
         return response()->json([
@@ -93,29 +103,7 @@ class BookingController extends Controller
         return response()->json(['message' => 'Бронь успешно удалена']);
     }
 
-    // Получение массива с нерабочими днями, забронированными днями и типами бронирования
-    // public function getBookingData()
-    // {
-    //     // Получаем все нерабочие дни
-    //     $nonWorkingDays = NonworkingDay::pluck('date')->toArray();
-
-    //     // Получаем все забронированные дни
-    //     $bookedDates = Booking::selectRaw('DATE(recording_start_date) as date')
-    //         ->distinct()
-    //         ->pluck('date')
-    //         ->toArray();
-
-    //     // Получаем массив с типами бронирования
-    //     $dataTypes = DataType::all();
-
-    //     return response()->json(
-    //         [
-    //             'holidays' => $nonWorkingDays,
-    //             'bookedDates' => $bookedDates,
-    //             'dataTypes' => $dataTypes
-    //         ]
-    //     );
-    // }
+    // Получение массива с нерабочими днями, забронированными днями и типами данных для бронирования
     public function getBookingData()
     {
         // Получаем все нерабочие дни
@@ -141,7 +129,7 @@ class BookingController extends Controller
         // Убираем дубликаты
         $bookedDates = array_values(array_unique($bookedDates));
 
-        // Получаем массив с типами бронирования
+        // Получаем массив с типами данных для бронирование
         $dataTypes = DataType::all();
 
         return response()->json([

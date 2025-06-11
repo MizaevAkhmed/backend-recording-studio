@@ -12,7 +12,7 @@ class UserController extends Controller
     // Получение всех пользователей (только админ)
     public function index()
     {
-        if (Auth::user()->type_user !== 'admin') {
+        if (!Auth::user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -22,7 +22,7 @@ class UserController extends Controller
     // Получение одного пользователя
     public function show($id)
     {
-        if (Auth::id() != $id && Auth::user()->type_user !== 'admin') {
+        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -32,7 +32,7 @@ class UserController extends Controller
     // Создание нового пользователя (только админ)
     public function store(Request $request)
     {
-        if (Auth::user()->type_user !== 'admin') {
+        if (!Auth::user()->isAdmin()) {
             return response()->json(['message' => 'У вас нет доступа'], 403);
         }
 
@@ -62,7 +62,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (Auth::id() != $id && Auth::user()->type_user !== 'admin') {
+        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -92,7 +92,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (Auth::id() != $id && Auth::user()->type_user !== 'admin') {
+        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

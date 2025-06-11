@@ -27,20 +27,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     // Бронирование студии
-    Route::get('/booking', [BookingController::class, 'index']);
+    Route::get('/user-bookings', [BookingController::class, 'userBookings']); // Получение списка бронирований для текущего пользователя
     Route::post('/booking', [BookingController::class, 'store']);
     Route::put('/booking/{id}', [BookingController::class, 'update']);
     Route::get('/getBookingData', [BookingController::class, 'getBookingData']); // Получение праздников и забронированных дней для отображения их в календаре при бронировании
 
+    // Категории материалов (Типы данных)
+    Route::get('/data-types', [DataTypeController::class, 'index']);
+
     // Материалы
+    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsAndCategories']); // Получение сортированного списка материалов с типами данных
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);
-    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsAndCategories']); // Получение сортированного списка материалов с типами данных
-
-    // // Профиль пользователя
-    // Route::get('/users/{id}', [UserController::class, 'index']);
-    // Route::put('/users/{id}', [UserController::class, 'update']);
 });
 
 // Админские маршруты (только для администраторов)
@@ -58,7 +57,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('/data-types/{id}', [DataTypeController::class, 'destroy']);
 
     // Бронирование студии
-    Route::get('/booking', [BookingController::class, 'index']);
+    Route::get('/admin-bookings', [BookingController::class, 'adminBookings']);
     Route::post('/booking', [BookingController::class, 'store']);
     Route::put('/booking/{id}', [BookingController::class, 'update']);
     Route::delete('/booking/{id}', [BookingController::class, 'destroy']);

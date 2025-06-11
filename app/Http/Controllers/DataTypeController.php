@@ -3,13 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\DataType;
 use Illuminate\Http\Request;
 
 class DataTypeController extends Controller
 {
     public function index()
     {
-        
+        return DataType::all();
     }
 
     public function show($id)
