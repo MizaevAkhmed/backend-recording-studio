@@ -45,7 +45,7 @@ class AuthController extends Controller
         if (!Auth::attempt($credentials)) {
             // Возвращаем ошибку если авторизация не удалась
             throw ValidationException::withMessages([
-                'email' => ['These credentials do not match our records.'],
+                'email' => ['Неверный email или пароль.'],
             ]);
         }
 
