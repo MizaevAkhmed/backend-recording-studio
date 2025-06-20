@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('photo_profile');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('type_user', ['student', 'teacher', 'admin']);
+            $table->enum('type_user', ['student', 'teacher', 'system_admin', 'studio_admin']);
             $table->timestamps();
         });
     }

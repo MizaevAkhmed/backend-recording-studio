@@ -17,90 +17,9 @@ class BookingController extends Controller
         return response()->json(
             Booking::with(['dataType'])
                 ->where('user_id', Auth::id())
+                ->where('status', '<>', 'cancelled')
                 ->get()
         );
-    }
-
-    // Получение списка бронирований для админа
-    public function adminBookings()
-    {
-        if (!Auth::check() || !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        return response()->json(
-            Booking::with(['user', 'type'])->get()
-        );
-    }
-
-    // Просмотр конкретного бронирования
-    public function show($id)
-    {
-        $booking = Booking::findOrFail($id);
-        return response()->json($booking, 200);
-    }
-
-    // Создание нового бронирования
-    public function store(Request $request)
-    {
-        $request->validate([
-            'data_type_id' => 'required|exists:data_types,id',
-            'description' => 'nullable|string',
-            'recording_start_date' => 'required|date',
-            'end_date_of_recording' => 'required|date|after:recording_start_date',
-        ]);
-
-        $booking = Booking::create([
-            'user_id' => Auth::id(),
-            'data_type_id' => $request->data_type_id,
-            'description' => $request->description,
-            'recording_start_date' => $request->recording_start_date,
-            'end_date_of_recording' => $request->end_date_of_recording,
-            'status' => 'pending'
-        ]);
-
-        return response()->json([
-            'message' => 'Бронь успешно создана',
-            'booking' => $booking
-        ]);
-    }
-
-    // Обновление бронирования
-    public function update(Request $request, Booking $booking)
-    {
-        // Проверяем, имеет ли пользователь права на редактирование
-        if ($booking->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'У вас нет прав для редактирования'], 403);
-        }
-
-        // Обновляем бронирование
-        $booking->update([
-            'data_type_id' => $request->data_type_id ?? $booking->data_type_id,
-            'description' => $request->description ?? $booking->description,
-            'recording_start_date' => $request->recording_start_date ?? $booking->recording_start_date,
-            'end_date_of_recording' => $request->end_date_of_recording ?? $booking->end_date_of_recording,
-            'status' => $request->status ?? $booking->status
-        ]);
-
-        return response()->json([
-            'message' => 'Бронь успешно обновлена',
-            'booking' => $booking
-        ]);
-    }
-
-    // Удаление бронирования
-    public function destroy($id)
-    {
-        $booking = Booking::findOrFail($id);
-
-        // Проверка доступа: удалить может только владелец или админ
-        if ($booking->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
-            return response()->json(['error' => 'У вас нет прав для удаления'], 403);
-        }
-
-        $booking->delete();
-
-        return response()->json(['message' => 'Бронь успешно удалена']);
     }
 
     // Получение массива с нерабочими днями, забронированными днями и типами данных для бронирования
@@ -137,5 +56,112 @@ class BookingController extends Controller
             'bookedDates' => $bookedDates,
             'dataTypes' => $dataTypes
         ]);
+    }
+
+    // Получение списка бронирований для системного администратора и для администратора студии
+    public function adminStudioBookings(){
+        $user = Auth::user();
+
+        if (!$user || !$user->hasRole(['studio_admin', 'system_admin'])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $bookings = Booking::with(['user', 'type_user'])->get();
+
+        return response()->json($bookings);
+    }
+
+    // Просмотр конкретного бронирования
+    public function show($id)
+    {
+        $booking = Booking::findOrFail($id);
+        return response()->json($booking, 200);
+    }
+
+    // Создание нового бронирования
+    public function store(Request $request)
+    {
+        $request->validate([
+            'data_type_id' => 'required|exists:data_types,id',
+            'description' => 'nullable|string',
+            'recording_start_date' => 'required|date',
+            'end_date_of_recording' => 'required|date|after_or_equal:recording_start_date',
+        ]);
+
+        $booking = Booking::create([
+            'user_id' => Auth::id(),
+            'data_type_id' => $request->data_type_id,
+            'description' => $request->description,
+            'recording_start_date' => $request->recording_start_date,
+            'end_date_of_recording' => $request->end_date_of_recording,
+            'status' => 'pending'
+        ]);
+
+        return response()->json([
+            'message' => 'Бронь успешно создана',
+            'booking' => $booking
+        ]);
+    }
+
+    // Обновление бронирования
+    public function update(Request $request, $id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        // Проверяем права пользователя
+        if ($booking->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+            return response()->json(['error' => 'У вас нет прав для редактирования'], 403);
+        }
+
+        // Валидация (можно добавить при необходимости)
+        $request->validate([
+            'data_type_id' => 'sometimes|exists:data_types,id',
+            'description' => 'nullable|string',
+            'recording_start_date' => 'sometimes|date',
+            'end_date_of_recording' => 'required|date|after_or_equal:recording_start_date',
+            'status' => 'sometimes|string',
+        ]);
+
+        // Обновляем данные
+        $booking->update([
+            'data_type_id' => $request->data_type_id ?? $booking->data_type_id,
+            'description' => $request->description ?? $booking->description,
+            'recording_start_date' => $request->recording_start_date ?? $booking->recording_start_date,
+            'end_date_of_recording' => $request->end_date_of_recording ?? $booking->end_date_of_recording,
+            'status' => $request->status ?? $booking->status,
+        ]);
+
+        return response()->json([
+            'message' => 'Бронь успешно обновлена',
+            'booking' => $booking
+        ]);
+    }
+
+    // Удаляет бронь полностью для администраторов или меняет статус на "cancelled" для владельца брони.
+    public function destroy($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $user = Auth::user();
+
+        // Проверка прав: удалить полностью могут только админы (system_admin, studio_admin)
+        $isAdmin = $user->hasRole('system_admin') || $user->hasRole('studio_admin');
+
+        // Владелец брони
+        $isOwner = $booking->user_id === $user->id;
+
+        if ($isAdmin) {
+            // Админы полностью удаляет бронь
+            $booking->delete();
+            return response()->json(['message' => 'Бронь успешно удалена администратором']);
+        }
+
+        if ($isOwner) {
+            // Владелец ставит статус cancelled
+            $booking->status = 'cancelled';
+            $booking->save();
+            return response()->json(['message' => 'Бронь успешно отменена']);
+        }
+
+        return response()->json(['error' => 'У вас нет прав для удаления'], 403);
     }
 }

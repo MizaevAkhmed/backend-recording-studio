@@ -15,12 +15,12 @@ class NewsPhotoSeeder extends Seeder
     {
         NewsPhoto::create([
             'news_id' => 1,
-            'path' => 'images\background-studio.jpg',
+            'path' => 'news-photos/background-studio.jpg',
         ]);
 
         NewsPhoto::create([
             'news_id' => 1,
-            'path' => 'images\photo-studio-for-podcasts.jpeg',
+            'path' => 'news-photos/photo-studio-for-podcasts.jpeg',
         ]);
     }
 }

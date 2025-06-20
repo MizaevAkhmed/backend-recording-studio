@@ -10,16 +10,23 @@ class NewsPhoto extends Model
     use HasFactory;
 
     protected $fillable = ['news_id', 'path'];
-
-    public function getPathAttribute($value)
-    {
-        $normalizedPath = str_replace('\\', '/', $value);
-        return asset('storage/' . $normalizedPath);
-    }
+    protected $appends = ['file_url'];
 
     // Связь с моделью News (многие к одному)
     public function news()
     {
         return $this->belongsTo(News::class);  // Обратная связь с News
+    }
+
+    // Полный URL к файлу
+    public function getFileUrlAttribute()
+    {
+        if (!$this->path) {
+            return null;
+        }
+        if (filter_var($this->path, FILTER_VALIDATE_URL)) {
+            return $this->path;
+        }
+        return asset('storage/' . $this->path);
     }
 }

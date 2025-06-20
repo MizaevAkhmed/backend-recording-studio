@@ -10,8 +10,13 @@ class MaterialController extends Controller
 {
     public function getMaterialsAndCategories()
     {
-        $categories = DataType::all(); // категории материалов (типы данных)
-        $materials = Material::with('dataType')->get(); // материалы с подгруженной категорией
+        $categories = DataType::all();
+        $materials = Material::with('dataType', 'user:id,firstname,name')->get();
+
+        // Добавляем публичный URL к каждому материалу
+        $materials->each(function ($material) {
+            $material->file_url = $material->file_url;
+        });
 
         return response()->json([
             'categories' => $categories,
@@ -19,28 +24,24 @@ class MaterialController extends Controller
         ]);
     }
 
-    public function index()
-    {
-        return Material::all();
-    }
-
     public function show($id)
     {
         $material = Material::findOrFail($id);
-
-        if (!$material) {
-            return response()->json(['error' => 'Материал не найден'], 404);
-        }
+        $material->file_url = $material->file_url;
 
         return response()->json($material, 200);
     }
 
     public function store(Request $request)
     {
+        if (!$request->user()->hasRole(['studio_admin', 'system_admin'])) {
+            return response()->json(['error' => 'У вас нет прав для создания материала'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'data_type_id' => 'required|exists:data_types,id',
-            'file' => 'nullable|file|max:102400|mimes:mp4,mp3,avi,doc,docx,pdf',
+            'file' => 'nullable|file|max:512000|mimes:mp4,mov,avi,mkv,mp3,wav,aac,jpg,jpeg,png,webp',
             'external_link' => 'nullable|url',
             'content' => 'nullable|string',
             'description' => 'nullable|string',
@@ -50,7 +51,7 @@ class MaterialController extends Controller
 
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('materials', 'public');
-            $validated['file'] = 'storage/' . $path;
+            $validated['file'] = $path;  // только относительный путь
         } elseif ($request->filled('external_link')) {
             $validated['file'] = $request->input('external_link');
         } else {
@@ -71,14 +72,14 @@ class MaterialController extends Controller
     {
         $material = Material::findOrFail($id);
 
-        if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
+        if (!$request->user()->hasRole(['studio_admin', 'system_admin']) && $request->user()->id !== $material->user_id) {
             return response()->json(['error' => 'У вас нет доступа'], 403);
         }
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'data_type_id' => 'required|exists:data_types,id',
-            'file' => 'nullable|file|max:102400|mimes:mp4,mp3,avi,doc,docx,pdf',
+            'file' => 'nullable|file|max:512000|mimes:mp4,mov,avi,mkv,mp3,wav,aac,jpg,jpeg,png,webp',
             'external_link' => 'nullable|url',
             'content' => 'nullable|string',
             'description' => 'nullable|string',
@@ -86,10 +87,10 @@ class MaterialController extends Controller
 
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('materials', 'public');
-            $validated['file'] = 'storage/' . $path;
+            $validated['file'] = $path;  // только относительный путь
         } elseif ($request->filled('external_link')) {
             $validated['file'] = $request->input('external_link');
-        } // иначе не трогаем старое значение
+        }
 
         unset($validated['external_link']);
 
@@ -101,13 +102,11 @@ class MaterialController extends Controller
         ], 200);
     }
 
-
     public function destroy(Request $request, $id)
     {
         $material = Material::findOrFail($id);
 
-        // Проверка прав: только админ или автор может удалить
-        if (!$request->user()->isAdmin() && $request->user()->id !== $material->user_id) {
+        if (!$request->user()->hasRole(['studio_admin', 'system_admin']) && $request->user()->id !== $material->user_id) {
             return response()->json([
                 'error' => 'У вас нет прав для удаления этого материала'
             ], 403);

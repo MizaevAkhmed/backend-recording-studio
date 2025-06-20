@@ -13,13 +13,10 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'firstname',
-        'name',
-        'photo_profile',
-        'email',
-        'password',
-        'type_user'
+        'firstname', 'name', 'email', 'password', 'type_user', 'photo_profile'
     ];
+
+    protected $appends = ['photo_profile_url'];
 
     protected $hidden = [
         'password',
@@ -37,8 +34,16 @@ class User extends Authenticatable
         return $this->hasMany(Material::class); // Один пользователь может иметь много материалов
     }
 
-    public function isAdmin(): bool
+    public function hasRole($roles)
     {
-        return $this->type_user === 'admin';
+        $roles = is_array($roles) ? $roles : func_get_args();
+        return in_array($this->type_user, $roles);
+    }
+
+    public function getPhotoProfileUrlAttribute()
+    {
+        return $this->photo_profile
+            ? asset('storage/' . $this->photo_profile)
+            : null;
     }
 }

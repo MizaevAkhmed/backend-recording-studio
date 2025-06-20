@@ -9,13 +9,10 @@ use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
-    // Получение всех новостей вместе с категориями
+    // Получение всех новостей вместе с категориями и фото
     public function getNewsAndCategories()
     {
-        // Получаем категории
         $categories = NewsCategory::all();
-
-        // Получаем новости с фотографиями и категориями
         $news = News::with('photos')->get();
 
         return response()->json([
@@ -24,48 +21,36 @@ class NewsController extends Controller
         ]);
     }
 
-    // Получение всех новостей
-    public function index()
-    {
-        return News::with('photos:id,news_id,path')
-            ->select('id', 'title', 'content', 'date', 'location', 'category_id')
-            ->get();
-    }
-
-    // Получение одной новости
+    // Получение одной новости с фото и категорией
     public function show($id)
     {
-        // Подгружаем связанные категории и фото
-        return News::with(['category', 'photos'])->findOrFail($id);
+        $news = News::with(['photos', 'category'])->findOrFail($id);
+
+        return response()->json($news);
     }
 
-    // Создание новости
+    // Создание новости (только для system_admin)
     public function store(Request $request)
     {
-        // Только для администратора
-        if (auth()->user()->role !== 'admin') {
+        if ($request->user()->type_user !== 'system_admin') {
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 
-        // Валидация входных данных
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
             'date' => 'required|date',
             'location' => 'nullable|string|max:255',
-            'category_id' => 'nullable|exists:news_categories,id', // Категория должна существовать
-            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240', // Ограничение на фото
+            'category_id' => 'nullable|exists:news_categories,id',
+            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240',
         ]);
 
-        // Создание новости
         $news = News::create($validated);
 
-        // Загрузка и сохранение фото
+        // Загрузка фото
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                // Сохранение файла в директории 'news_photos'
-                $path = $file->store('uploads/news_photos', 'public');
-                // Создание связи с фото
+                $path = $file->store('news-photos', 'public');
                 $news->photos()->create(['path' => $path]);
             }
         }
@@ -73,22 +58,20 @@ class NewsController extends Controller
         return response()->json($news, 201);
     }
 
-    // Обновление новости
+    // Обновление новости (только для system_admin)
     public function update(Request $request, $id)
     {
-        // Только для администратора
-        if (auth()->user()->role !== 'admin') {
+        if ($request->user()->type_user !== 'system_admin') {
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 
-        // Валидация входных данных
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'content' => 'sometimes|required|string',
             'date' => 'sometimes|required|date',
             'location' => 'nullable|string|max:255',
-            'category_id' => 'nullable|exists:news_categories,id', // Категория должна существовать
-            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240', // Ограничение на фото
+            'category_id' => 'nullable|exists:news_categories,id',
+            'photos.*' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240',
         ]);
 
         $news = News::findOrFail($id);
@@ -97,9 +80,7 @@ class NewsController extends Controller
         // Загрузка новых фото
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                // Сохранение фото в директории 'news_photos'
-                $path = $file->store('news_photos', 'public');
-                // Создание связи с фото
+                $path = $file->store('news-photos', 'public');
                 $news->photos()->create(['path' => $path]);
             }
         }
@@ -107,24 +88,23 @@ class NewsController extends Controller
         return response()->json($news);
     }
 
-    // Удаление новости
-    public function destroy($id)
+    // Удаление новости (только для system_admin)
+    public function destroy(Request $request, $id)
     {
-        // Только для администратора
-        if (auth()->user()->role !== 'admin') {
+        if ($request->user()->type_user !== 'system_admin') {
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 
         $news = News::findOrFail($id);
 
-        // Удаление фото при удалении новости
+        // Удаляем фото с диска и из БД
         foreach ($news->photos as $photo) {
-            Storage::delete('public/' . $photo->path); // Удаляем фото с сервера
-            $photo->delete(); // Удаляем запись в базе данных
+            Storage::disk('public')->delete($photo->path);
+            $photo->delete();
         }
 
-        $news->delete(); // Удаление новости
+        $news->delete();
 
-        return response()->json(['message' => 'Удалено успешно']);
+        return response()->json(['message' => 'Новость успешно удалена']);
     }
 }

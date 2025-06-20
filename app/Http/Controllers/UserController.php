@@ -6,24 +6,31 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
+    public function profile()
+    {
+        $user = Auth::user();
+        return response()->json($user);
+    }
+
     // Получение всех пользователей (только админ)
     public function index()
     {
-        if (!Auth::user()->isAdmin()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if (!Auth::user()->hasRole(['system_admin'])) {
+            return response()->json(['message' => 'У вас нет доступа'], 403);
         }
 
         return response()->json(User::all());
     }
 
-    // Получение одного пользователя
+    // Получение одного пользователя (только админ)
     public function show($id)
     {
-        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if (!Auth::user()->hasRole(['system_admin'])) {
+            return response()->json(['message' => 'У вас нет доступа'], 403);
         }
 
         return response()->json(User::findOrFail($id));
@@ -32,71 +39,96 @@ class UserController extends Controller
     // Создание нового пользователя (только админ)
     public function store(Request $request)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (!Auth::user()->hasRole(['system_admin'])) {
             return response()->json(['message' => 'У вас нет доступа'], 403);
         }
 
         $validated = $request->validate([
             'firstname' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'photo_profile' => 'nullable|string|max:255',
-            'email' => 'required|string|email|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
-            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])], // Проверяем, если передано
+            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])],
+            'photo_profile' => 'nullable|file|image|max:2048',
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('photo_profile')) {
+            $photoPath = $request->file('photo_profile')->store('profile_photos', 'public');
+        }
 
         $user = User::create([
             'firstname' => $validated['firstname'],
             'name' => $validated['name'],
-            'photo_profile' => $validated['photo_profile'] ?? null,
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
-            'type_user' => $validated['type_user'] ?? 'student', // По умолчанию "student"
+            'type_user' => $validated['type_user'] ?? 'student',
+            'photo_profile' => $photoPath,
         ]);
 
         return response()->json($user, 201);
     }
 
-    // Обновление пользователя
+    // Обновление пользователя (админ или сам пользователь)
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
-        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Только админ или сам пользователь
+        if (!Auth::user()->hasRole(['system_admin']) && Auth::id() !== $user->id) {
+            return response()->json(['message' => 'У вас нет доступа'], 403);
         }
 
         $validated = $request->validate([
             'firstname' => 'required|string|max:255',
             'name' => 'required|string|max:255',
-            'photo_profile' => 'nullable|string|max:255',
-            'email' => ['required|string|email|max:255'],
-            'password' => 'nullable|string|min:8', // Разрешаем оставить старый пароль
-            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])], // Проверяем только если передано
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8',
+            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])],
+            'photo_profile' => 'nullable|file|image|max:2048',
         ]);
 
-        $user->update([
-            'firstname' => $validated['firstname'],
-            'name' => $validated['name'],
-            'photo_profile' => $validated['photo_profile'] ?? $user->photo_profile,
-            'email' => $validated['email'],
-            'password' => isset($validated['password']) ? bcrypt($validated['password']) : $user->password,
-            'type_user' => $validated['type_user'] ?? $user->type_user, // Не менять, если не передано
-        ]);
+        if ($request->hasFile('photo_profile')) {
+            // Удалим старое фото, если оно есть
+            if ($user->photo_profile) {
+                Storage::disk('public')->delete($user->photo_profile);
+            }
+
+            $user->photo_profile = $request->file('photo_profile')->store('profile_photos', 'public');
+        }
+
+        $user->firstname = $validated['firstname'];
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        
+        if (Auth::user()->hasRole(['system_admin']) && isset($validated['type_user'])) {
+            $user->type_user = $validated['type_user'];
+        }
+
+        if (!empty($validated['password'])) {
+            $user->password = bcrypt($validated['password']);
+        }
+
+        $user->save();
 
         return response()->json($user, 200);
     }
 
-    // Удаление пользователя
+    // Удаление пользователя (только админ)
     public function destroy($id)
     {
         $user = User::findOrFail($id);
 
-        if (Auth::id() != $id && !Auth::user()->isAdmin()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if (!Auth::user()->hasRole(['system_admin'])) {
+            return response()->json(['message' => 'У вас нет доступа'], 403);
+        }
+
+        if ($user->photo_profile) {
+            Storage::disk('public')->delete($user->photo_profile);
         }
 
         $user->delete();
+
         return response()->json(['message' => 'Пользователь успешно удален']);
     }
 }

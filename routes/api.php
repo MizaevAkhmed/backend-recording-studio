@@ -19,9 +19,8 @@ Route::get('/news-with-categories', [NewsController::class, 'getNewsAndCategorie
 // Защищенные маршруты (только для аутентифицированных пользователей)
 Route::middleware(['auth:sanctum'])->group(function () {
     // Профиль пользователя
-    Route::get('/profile/{id}', [UserController::class, 'show']);
+    Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile/{id}', [UserController::class, 'update']);
-    Route::delete('/profile/{id}', [UserController::class, 'delete']);
 
     // Выйти из учетной записи
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -43,7 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // Админские маршруты (только для администраторов)
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'role:system_admin'])->group(function () {
     // Пользователи
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
@@ -75,7 +74,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('/news/{id}', [NewsController::class, 'destroy']);
 
     // Материалы
-    Route::get('/materials', [MaterialController::class, 'index']);
+    Route::get('/materials-with-categories', [MaterialController::class, 'getMaterialsAndCategories']);
     Route::post('/materials', [MaterialController::class, 'store']);
     Route::put('/materials/{id}', [MaterialController::class, 'update']);
     Route::delete('/materials/{id}', [MaterialController::class, 'destroy']);

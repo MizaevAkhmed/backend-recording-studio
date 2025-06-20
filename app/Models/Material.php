@@ -21,9 +21,27 @@ class Material extends Model
         'description',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function dataType()
     {
         return $this->belongsTo(DataType::class, 'data_type_id');
+    }
+
+    public function getFileUrlAttribute()
+    {
+        if (!$this->file) {
+            return null;
+        }
+        // Если file уже внешняя ссылка — вернуть её
+        if (filter_var($this->file, FILTER_VALIDATE_URL)) {
+            return $this->file;
+        }
+        // Иначе считаем, что это относительный путь внутри storage/app/public/
+        return asset('storage/' . $this->file);
     }
 }
 
