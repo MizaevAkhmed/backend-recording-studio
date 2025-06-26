@@ -59,16 +59,38 @@ class BookingController extends Controller
     }
 
     // Получение списка бронирований для системного администратора и для администратора студии
-    public function adminStudioBookings(){
+    public function getAdminBookingPageData()
+    {
         $user = Auth::user();
 
         if (!$user || !$user->hasRole(['studio_admin', 'system_admin'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $bookings = Booking::with(['user', 'type_user'])->get();
+        $bookings = Booking::with([
+            'user:id,id,name,firstname,email',
+            'dataType:id,id,name,description'
+        ])->get();
 
-        return response()->json($bookings);
+        $dataTypes = DataType::all();
+
+        $bookedDates = [];
+        foreach ($bookings as $booking) {
+            $start = new \DateTime($booking->recording_start_date);
+            $end = new \DateTime($booking->end_date_of_recording);
+            while ($start <= $end) {
+                $bookedDates[] = $start->format('Y-m-d');
+                $start->modify('+1 day');
+            }
+        }
+
+        $bookedDates = array_values(array_unique($bookedDates));
+
+        return response()->json([
+            'bookings' => $bookings,
+            'dataTypes' => $dataTypes,
+            'bookedDates' => $bookedDates,
+        ]);
     }
 
     // Просмотр конкретного бронирования
@@ -107,13 +129,16 @@ class BookingController extends Controller
     public function update(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
+        $user = Auth::user();
 
-        // Проверяем права пользователя
-        if ($booking->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $isAdmin = $user->hasRole('system_admin') || $user->hasRole('studio_admin');
+        $isOwner = $booking->user_id === $user->id;
+
+        if (!$isAdmin && !$isOwner) {
             return response()->json(['error' => 'У вас нет прав для редактирования'], 403);
         }
 
-        // Валидация (можно добавить при необходимости)
+        // Валидация
         $request->validate([
             'data_type_id' => 'sometimes|exists:data_types,id',
             'description' => 'nullable|string',
@@ -122,18 +147,48 @@ class BookingController extends Controller
             'status' => 'sometimes|string',
         ]);
 
-        // Обновляем данные
-        $booking->update([
-            'data_type_id' => $request->data_type_id ?? $booking->data_type_id,
-            'description' => $request->description ?? $booking->description,
-            'recording_start_date' => $request->recording_start_date ?? $booking->recording_start_date,
-            'end_date_of_recording' => $request->end_date_of_recording ?? $booking->end_date_of_recording,
-            'status' => $request->status ?? $booking->status,
-        ]);
+        $updateData = [];
+
+        if ($isOwner && !$isAdmin) {
+            // Владелец может менять все, кроме статуса
+            if ($request->has('data_type_id')) {
+                $updateData['data_type_id'] = $request->data_type_id;
+            }
+            if ($request->has('description')) {
+                $updateData['description'] = $request->description;
+            }
+            if ($request->has('recording_start_date')) {
+                $updateData['recording_start_date'] = $request->recording_start_date;
+            }
+            if ($request->has('end_date_of_recording')) {
+                $updateData['end_date_of_recording'] = $request->end_date_of_recording;
+            }
+            // Статус НЕ меняем
+        }
+
+        if ($isAdmin && !$isOwner) {
+            // Админ может менять только статус
+            if ($request->has('status')) {
+                $updateData['status'] = $request->status;
+            }
+            // Остальные поля НЕ меняем
+        }
+
+        // В случае, если пользователь и админ — например, если админ сам владелец брони,
+        // можно либо разрешить полный доступ, либо ограничить
+        // Здесь можно добавить логику, если нужно
+
+        if (empty($updateData)) {
+            return response()->json(['error' => 'Нет данных для обновления или недостаточно прав'], 400);
+        }
+
+        $booking->update($updateData);
+
+        $booking->load(['user', 'dataType']);
 
         return response()->json([
             'message' => 'Бронь успешно обновлена',
-            'booking' => $booking
+            'booking' => $booking,
         ]);
     }
 
@@ -143,22 +198,20 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
         $user = Auth::user();
 
-        // Проверка прав: удалить полностью могут только админы (system_admin, studio_admin)
-        $isAdmin = $user->hasRole('system_admin') || $user->hasRole('studio_admin');
-
-        // Владелец брони
+        $isAdmin = $user->hasRole(['system_admin', 'studio_admin']);
         $isOwner = $booking->user_id === $user->id;
 
         if ($isAdmin) {
-            // Админы полностью удаляет бронь
             $booking->delete();
             return response()->json(['message' => 'Бронь успешно удалена администратором']);
         }
 
         if ($isOwner) {
-            // Владелец ставит статус cancelled
             $booking->status = 'cancelled';
             $booking->save();
+
+            // Если нужно вернуть обновлённую бронь:
+            $booking->load(['user', 'dataType']);
             return response()->json(['message' => 'Бронь успешно отменена']);
         }
 
