@@ -72,12 +72,25 @@ class NewsController extends Controller
             'location' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:news_categories,id',
             'photos.*' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:10240',
+            'deleted_photo_ids' => 'array',
+            'deleted_photo_ids.*' => 'integer|exists:news_photos,id',
         ]);
 
         $news = News::findOrFail($id);
         $news->update($validated);
 
-        // Загрузка новых фото
+        // Удаление отдельных фото
+        if ($request->has('deleted_photo_ids')) {
+            foreach ($request->deleted_photo_ids as $photoId) {
+                $photo = $news->photos()->find($photoId);
+                if ($photo) {
+                    Storage::disk('public')->delete($photo->path);
+                    $photo->delete();
+                }
+            }
+        }
+
+        // Добавление новых фото
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
                 $path = $file->store('news-photos', 'public');
@@ -85,7 +98,7 @@ class NewsController extends Controller
             }
         }
 
-        return response()->json($news);
+        return response()->json($news->load('photos', 'category'));
     }
 
     // Удаление новости (только для system_admin)
@@ -95,9 +108,8 @@ class NewsController extends Controller
             return response()->json(['message' => 'Нет доступа'], 403);
         }
 
-        $news = News::findOrFail($id);
+        $news = News::with('photos')->findOrFail($id);
 
-        // Удаляем фото с диска и из БД
         foreach ($news->photos as $photo) {
             Storage::disk('public')->delete($photo->path);
             $photo->delete();

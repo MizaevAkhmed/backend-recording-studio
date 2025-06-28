@@ -67,7 +67,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:system_admin, studio_a
     Route::delete('/nonworking-days/{id}', [NonworkingDaysController::class, 'destroy']);
 
     // Новости
-    Route::get('/news', [NewsController::class, 'index']);
+    Route::get('/news', [NewsController::class, 'getNewsAndCategories']);
+    Route::get('/news/{id}', [NewsController::class, 'show']);
     Route::post('/news', [NewsController::class, 'store']);
     Route::put('/news/{id}', [NewsController::class, 'update']);
     Route::delete('/news/{id}', [NewsController::class, 'destroy']);
