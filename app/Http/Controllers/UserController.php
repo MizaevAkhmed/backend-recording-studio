@@ -7,12 +7,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
     public function profile()
     {
         $user = Auth::user();
+
+        // Добавляем ссылку на фото профиля
+        $user->photo_profile_url = $user->photo_profile
+            ? asset('storage/' . $user->photo_profile)
+            : null;
+
         return response()->json($user);
     }
 
@@ -74,7 +82,6 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Только админ или сам пользователь
         if (!Auth::user()->hasRole(['system_admin']) && Auth::id() !== $user->id) {
             return response()->json(['message' => 'У вас нет доступа'], 403);
         }
@@ -83,33 +90,44 @@ class UserController extends Controller
             'firstname' => 'required|string|max:255',
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8',
-            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])],
             'photo_profile' => 'nullable|file|image|max:2048',
+            'type_user' => ['sometimes', Rule::in(['student', 'teacher', 'admin'])],
+            'old_password' => 'nullable|string',
+            'new_password' => 'nullable|string|min:8|confirmed',
         ]);
 
         if ($request->hasFile('photo_profile')) {
-            // Удалим старое фото, если оно есть
             if ($user->photo_profile) {
                 Storage::disk('public')->delete($user->photo_profile);
             }
-
             $user->photo_profile = $request->file('photo_profile')->store('profile_photos', 'public');
         }
 
         $user->firstname = $validated['firstname'];
         $user->name = $validated['name'];
         $user->email = $validated['email'];
-        
+
         if (Auth::user()->hasRole(['system_admin']) && isset($validated['type_user'])) {
             $user->type_user = $validated['type_user'];
         }
 
-        if (!empty($validated['password'])) {
-            $user->password = bcrypt($validated['password']);
+        if (!empty($validated['new_password'])) {
+            if (!Auth::user()->hasRole(['system_admin'])) {
+                if (empty($validated['old_password']) || !Hash::check($validated['old_password'], $user->password)) {
+                    throw ValidationException::withMessages([
+                        'old_password' => ['Старый пароль неверен.'],
+                    ]);
+                }
+            }
+            $user->password = bcrypt($validated['new_password']);
         }
 
         $user->save();
+
+        // Добавим ссылку на фото для удобства фронтенда
+        $user->photo_profile_url = $user->photo_profile
+            ? asset('storage/' . $user->photo_profile)
+            : null;
 
         return response()->json($user, 200);
     }

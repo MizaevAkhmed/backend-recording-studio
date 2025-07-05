@@ -9,11 +9,18 @@ use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
-    // Получение всех новостей вместе с категориями и фото
+    // Получение всех новостей вместе с категориями и фото с url
     public function getNewsAndCategories()
     {
         $categories = NewsCategory::all();
-        $news = News::with('photos')->get();
+        $news = News::with(['photos', 'category'])->get();
+
+        // Добавим url для каждого фото
+        $news->each(function ($item) {
+            $item->photos->each(function ($photo) {
+                $photo->url = $photo->path ? asset('storage/' . $photo->path) : null;
+            });
+        });
 
         return response()->json([
             'categories' => $categories,
@@ -25,6 +32,10 @@ class NewsController extends Controller
     public function show($id)
     {
         $news = News::with(['photos', 'category'])->findOrFail($id);
+
+        $news->photos->each(function ($photo) {
+            $photo->url = $photo->path ? asset('storage/' . $photo->path) : null;
+        });
 
         return response()->json($news);
     }
@@ -47,13 +58,20 @@ class NewsController extends Controller
 
         $news = News::create($validated);
 
-        // Загрузка фото
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                $path = $file->store('news-photos', 'public');
-                $news->photos()->create(['path' => $path]);
+                if ($file) {
+                    $path = $file->store('news-photos', 'public');
+                    $news->photos()->create(['path' => $path]);
+                }
             }
         }
+
+        // Добавим url к фото для ответа
+        $news->load('photos', 'category');
+        $news->photos->each(function ($photo) {
+            $photo->url = $photo->path ? asset('storage/' . $photo->path) : null;
+        });
 
         return response()->json($news, 201);
     }
@@ -79,7 +97,6 @@ class NewsController extends Controller
         $news = News::findOrFail($id);
         $news->update($validated);
 
-        // Удаление отдельных фото
         if ($request->has('deleted_photo_ids')) {
             foreach ($request->deleted_photo_ids as $photoId) {
                 $photo = $news->photos()->find($photoId);
@@ -90,15 +107,21 @@ class NewsController extends Controller
             }
         }
 
-        // Добавление новых фото
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $file) {
-                $path = $file->store('news-photos', 'public');
-                $news->photos()->create(['path' => $path]);
+                if ($file) {
+                    $path = $file->store('news-photos', 'public');
+                    $news->photos()->create(['path' => $path]);
+                }
             }
         }
 
-        return response()->json($news->load('photos', 'category'));
+        $news->load('photos', 'category');
+        $news->photos->each(function ($photo) {
+            $photo->url = $photo->path ? asset('storage/' . $photo->path) : null;
+        });
+
+        return response()->json($news);
     }
 
     // Удаление новости (только для system_admin)
